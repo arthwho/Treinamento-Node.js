@@ -102,14 +102,8 @@ app.put('/updateProgrammer', async (req, res) => {
         const record = await validateID(params);
 
         const properties = ['name', 'python', 'javascript', 'java'];
-        const check = properties.some((property) => {
-            return property in params;
-        });
-
-        if (!check){
-            res.send (`Request body does not have any of the following properties: ${properties.join(', ')}`);
-            return;
-        }
+        
+        validateProperties(properties, params, 'some');
 
         record.name = params.name || record.name;
         record.python = params.python || record.python;
@@ -160,6 +154,22 @@ const validateID = async (params) => {
         }
 
         return record;
+    } catch (error) {
+        throw error;
+    }
+}
+
+const validateProperties = (properties, params, fn) => {
+    try {
+        const check = properties[fn]((property) => {
+            return property in params;
+        });
+
+        if (!check){
+            throw `Missing properties: ${properties.join(', ')}`;
+        }
+
+        return true;
     } catch (error) {
         throw error;
     }
