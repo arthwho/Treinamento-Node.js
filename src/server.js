@@ -7,6 +7,10 @@ const port = 5000;
 
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+    res.sendFile('index.html', {root: __dirname});
+});
+
 app.listen(port, () => {
     console.log(`Now listening on port: ${port}`);
 });
@@ -26,15 +30,7 @@ app.post('/createProgrammer', async (req, res) => {
     try{
         const params = req.body;
         const properties = ['name', 'python', 'javascript', 'java'];
-        const check = properties.every((property) => {
-            return property in params;
-        });
-
-        if (!check){
-            const propStr = properties.join(', ');
-            res.send(`Missing properties: ${propStr}`);
-            return;
-        }
+        validateProperties(properties, params, 'every');
 
         const newProgrammer = await programmer.create({
             name: params.name,
@@ -122,19 +118,9 @@ app.delete('/deleteProgrammer', async (req, res) => {
     try{
         const params = req.body;
 
-        if (!('id' in params)){
-            res.send('Missing id');
-            return;
-        }
+        const record = await validateID(params);
 
-        const record = await programmer.findByPk(params.id);
-
-        if (!record){
-            res.send('No record found');
-            return;
-        }
-
-        await record.destroy();
+        record.destroy();
 
         res.send(`${record.id} ${record.name} - Deleted Successfully`);
     } catch (error) {
